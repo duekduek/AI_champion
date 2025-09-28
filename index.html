@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>서울시 자전거 대여소 현황 대시보드</title>
+  <!-- 웹폰트: Noto Sans KR -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a32;
+      --card-border:#1f2a48;
+      --text:#e8eefc;
+      --muted:#a9b4d0;
+      --accent:#7aa2ff;
+      --pill:#1b2550;
+      --pill-text:#cfe0ff;
+      --shadow: 0 6px 18px rgba(0,0,0,.25);
+      --radius: 18px;
+      --gap: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(122,162,255,.08), transparent 40%),
+                  radial-gradient(800px 600px at 110% -10%, rgba(84,214,255,.06), transparent 40%),
+                  var(--bg);
+      color:var(--text);
+      font-family:'Noto Sans KR', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      letter-spacing: .1px;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:saturate(1.2) blur(10px);
+      background: linear-gradient(180deg, rgba(11,16,32,.85), rgba(11,16,32,.65));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .wrap{
+      max-width:1200px; margin:0 auto; padding:18px 20px;
+    }
+    .title{
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .title h1{
+      margin:0; font-size: clamp(20px, 2.4vw, 28px); font-weight:700;
+      letter-spacing:.2px;
+    }
+    .subtitle{color:var(--muted); font-size:14px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background:var(--pill); color:var(--pill-text); font-size:12px; border:1px solid rgba(255,255,255,.06);
+    }
+    main{padding: 6px 0 40px}
+    section.gu{
+      padding: 18px 20px; margin: 24px auto 12px; max-width:1200px;
+    }
+    section.gu h2{
+      margin:0 0 14px; font-size: clamp(18px, 2vw, 22px);
+      font-weight:700; letter-spacing:.3px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .h2-line{
+      flex:1; height:1px; background:linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,0));
+    }
+
+    /* 카드 그리드 */
+    .grid{
+      display:grid; gap: var(--gap);
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(19,28,56,.9), rgba(16,24,48,.9));
+      border:1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display:flex; flex-direction:column; gap:12px;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .card:hover{
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      border-color:#2b3964;
+    }
+    .card-header{
+      display:flex; justify-content:space-between; gap:10px; align-items:flex-start;
+    }
+    .name{
+      font-size:16px; font-weight:700; line-height:1.3;
+    }
+    .chip{
+      padding:4px 8px; border-radius:999px; font-size:12px; font-weight:600;
+      background:linear-gradient(180deg, rgba(122,162,255,.15), rgba(122,162,255,.05));
+      border:1px solid rgba(122,162,255,.45); color:#bcd0ff; white-space:nowrap;
+    }
+    .meta{
+      display:grid; grid-template-columns: 1fr; gap:8px; color:var(--muted); font-size:13px;
+    }
+    .meta-row{display:flex; gap:8px; align-items:baseline; line-height:1.4}
+    .meta .label{min-width:98px; color:#cbd7f6}
+    .kvs{display:flex; flex-wrap:wrap; gap:8px}
+    .kv{
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 12px; padding:8px 10px; min-width: 110px;
+    }
+    .kv .k{font-size:12px; color:#b7c3e6}
+    .kv .v{font-size:14px; font-weight:700; margin-top:2px}
+    .actions{
+      display:flex; gap:10px; margin-top:4px;
+    }
+    .btn{
+      appearance:none; border:1px solid rgba(122,162,255,.45);
+      background: linear-gradient(180deg, rgba(122,162,255,.15), rgba(122,162,255,.05));
+      color:#e8efff; padding:9px 12px; border-radius:12px;
+      font-weight:700; font-size:13px; cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{transform: translateY(-1px); border-color:#92b3ff}
+    .btn:active{transform: translateY(0)}
+    .sr-only{
+      position:absolute !important; height:1px; width:1px; overflow:hidden;
+      clip: rect(1px,1px,1px,1px); white-space:nowrap;
+    }
+    /* 푸터(간단한 안내) */
+    footer{
+      color:var(--muted); font-size:12px; text-align:center;
+      padding:28px 10px 36px; border-top:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(11,16,32,.3), rgba(11,16,32,.6));
+    }
+    code{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color:#cfe0ff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">
+        <h1>서울시 자전거 대여소 현황 대시보드</h1>
+        <span class="pill">데모 데이터 · <span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">JSON</span> in-page</span>
+      </div>
+      <div class="subtitle">자치구별로 그룹화된 카드에서 대여소 기본 정보와 대여 이력 요약(총 대여건수, 평균 이용거리, 평균 이용시간)을 확인할 수 있습니다.</div>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer>
+    ‘지도로 보기’ 버튼은 구글 지도로 이동하며 새 탭에서 열리도록
+    <span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">target="_blank"</span> 를 사용했습니다.
+  </footer>
+
+  <script>
+    // ===== (1) 예시 JSON 배열 데이터 (요구사항의 모든 필드 포함) =====
+    // 대여소번호, 대여소명, 자치구, 위도, 경도, 설치시기(YYYY-MM), 운영방식(LCD/QR),
+    // 총대여건수, 평균이용거리(km), 평균이용시간(분)
+    const stations = [
+      {"대여소번호":1001,"대여소명":"강남역 10번 출구","자치구":"강남구","위도":37.498095,"경도":127.02761,"설치시기":"2018-05","운영방식":"QR","총대여건수":184532,"평균이용거리":2.8,"평균이용시간":18.4},
+      {"대여소번호":1002,"대여소명":"선릉역 1번 출구","자치구":"강남구","위도":37.504503,"경도":127.049008,"설치시기":"2019-03","운영방식":"QR","총대여건수":132421,"평균이용거리":2.4,"평균이용시간":16.9},
+      {"대여소번호":1101,"대여소명":"잠실역 롯데월드몰","자치구":"송파구","위도":37.513305,"경도":127.100227,"설치시기":"2017-09","운영방식":"LCD","총대여건수":154209,"평균이용거리":3.1,"평균이용시간":21.2},
+      {"대여소번호":1102,"대여소명":"가락시장역 사거리","자치구":"송파구","위도":37.492389,"경도":127.118539,"설치시기":"2020-07","운영방식":"QR","총대여건수":74322,"평균이용거리":2.2,"평균이용시간":15.1},
+      {"대여소번호":1201,"대여소명":"홍대입구역 9번 출구","자치구":"마포구","위도":37.55688,"경도":126.92379,"설치시기":"2016-11","운영방식":"LCD","총대여건수":201145,"평균이용거리":2.9,"평균이용시간":20.3},
+      {"대여소번호":1202,"대여소명":"상수역 1번 출구","자치구":"마포구","위도":37.547716,"경도":126.922852,"설치시기":"2021-04","운영방식":"QR","총대여건수":58211,"평균이용거리":2.1,"평균이용시간":14.6},
+      {"대여소번호":1301,"대여소명":"시청역 서울광장","자치구":"중구","위도":37.566014,"경도":126.977947,"설치시기":"2015-10","운영방식":"LCD","총대여건수":176332,"평균이용거리":2.6,"평균이용시간":17.5},
+      {"대여소번호":1302,"대여소명":"동대문역사문화공원","자치구":"중구","위도":37.565138,"경도":127.007896,"설치시기":"2018-02","운영방식":"QR","총대여건수":96544,"평균이용거리":2.0,"평균이용시간":13.9},
+      {"대여소번호":1401,"대여소명":"성수역 3번 출구","자치구":"성동구","위도":37.544581,"경도":127.056415,"설치시기":"2019-10","운영방식":"QR","총대여건수":80311,"평균이용거리":2.3,"평균이용시간":15.9},
+      {"대여소번호":1402,"대여소명":"왕십리역 환승센터","자치구":"성동구","위도":37.561533,"경도":127.037732,"설치시기":"2017-03","운영방식":"LCD","총대여건수":120488,"평균이용거리":2.7,"평균이용시간":18.2}
+    ];
+
+    // ===== (2) 유틸 =====
+    const fmt = {
+      number: (n)=> n.toLocaleString('ko-KR'),
+      km: (n)=> `${n.toFixed(1)} km`,
+      min: (n)=> `${n.toFixed(1)} 분`,
+      ym: (s)=> s, // YYYY-MM 그대로 표기
+    };
+
+    function groupByGu(rows){
+      return rows
+        .slice()
+        .sort((a,b)=> a.자치구.localeCompare(b.자치구, 'ko') || a.대여소명.localeCompare(b.대여소명, 'ko'))
+        .reduce((acc,row)=>{
+          (acc[row.자치구] ??= []).push(row);
+          return acc;
+        }, {});
+    }
+
+    // ===== (3) DOM 렌더링 =====
+    const app = document.getElementById('app');
+
+    function render(){
+      const groups = groupByGu(stations);
+      app.innerHTML = '';
+      for(const [gu, items] of Object.entries(groups)){
+        const sec = document.createElement('section');
+        sec.className = 'gu';
+        sec.innerHTML = `
+          <div class="wrap">
+            <h2>
+              ${gu}
+              <span class="h2-line" aria-hidden="true"></span>
+            </h2>
+            <div class="grid"></div>
+          </div>
+        `;
+        const grid = sec.querySelector('.grid');
+
+        items.forEach(row=>{
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.setAttribute('aria-labelledby', `name-${row.대여소번호}`);
+
+          card.innerHTML = `
+            <div class="card-header">
+              <div>
+                <div id="name-${row.대여소번호}" class="name">${row.대여소명}</div>
+                <div class="meta" role="list">
+                  <div class="meta-row" role="listitem">
+                    <span class="label">자치구</span>
+                    <span>${row.자치구}</span>
+                  </div>
+                  <div class="meta-row" role="listitem">
+                    <span class="label">
+                      <span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">위도/경도</span>
+                    </span>
+                    <span>${row.위도.toFixed(6)}, ${row.경도.toFixed(6)}</span>
+                  </div>
+                  <div class="meta-row" role="listitem">
+                    <span class="label">설치시기</span>
+                    <span>${fmt.ym(row.설치시기)}</span>
+                  </div>
+                  <div class="meta-row" role="listitem">
+                    <span class="label">운영방식</span>
+                    <span><span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">${row.운영방식}</span></span>
+                  </div>
+                </div>
+              </div>
+              <span class="chip">
+                <span class="sr-only">대여소번호</span>
+                <span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">ID</span> ${row.대여소번호}
+              </span>
+            </div>
+
+            <div class="kvs" aria-label="대여 이력 요약">
+              <div class="kv">
+                <div class="k">총 대여건수</div>
+                <div class="v" title="${row.총대여건수}">${fmt.number(row.총대여건수)}</div>
+              </div>
+              <div class="kv">
+                <div class="k">평균 이용거리</div>
+                <div class="v">${fmt.km(row.평균이용거리)}</div>
+              </div>
+              <div class="kv">
+                <div class="k">평균 이용시간</div>
+                <div class="v">${fmt.min(row.평균이용시간)}</div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <a class="btn" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps?q=${row.위도},${row.경도}">
+                <span lang="EN-US" style="font-size:12.0pt; line-height:115%; font-family:'Noto Sans KR'">지도로 보기</span>
+              </a>
+            </div>
+          `;
+
+          grid.appendChild(card);
+        });
+
+        app.appendChild(sec);
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
