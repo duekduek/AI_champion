@@ -101,7 +101,11 @@
     .meta{
       display:grid; grid-template-columns: 1fr; gap:8px; color:var(--muted); font-size:13px;
     }
-    .meta-row{display:flex; gap:8px; align-items:baseline; line-height:1.4}
+    .meta-row{
+      display:flex; gap:8px; align-items:baseline; line-height:1.4;
+      padding:6px 0; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .meta-row:last-child{border-bottom:none}
     .meta .label{min-width:98px; color:#cbd7f6}
     .kvs{display:flex; flex-wrap:wrap; gap:8px}
     .kv{
